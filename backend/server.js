@@ -1,24 +1,147 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http'); // <-- add this
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const Room = require('./models/Room');
-const User = require('./models/User');
 const bcrypt = require('bcryptjs');
+
+// --- Inlined TicketGenerator (was utils/TicketGenerator.js) ---
+const TicketGenerator = {
+  generateHousieTicket: function() {
+    const ticket = Array(3)
+      .fill(null)
+      .map(() => Array(9).fill(null));
+
+    const columnRanges = [
+      [1, 10],
+      [11, 20],
+      [21, 30],
+      [31, 40],
+      [41, 50],
+      [51, 60],
+      [61, 70],
+      [71, 80],
+      [81, 90],
+    ];
+
+    const numbersPerColumn = columnRanges.map(([min, max]) =>
+      Array.from({ length: max - min + 1 }, (_, i) => min + i)
+    );
+
+    for (let row = 0; row < 3; row++) {
+      const columns = [...Array(9).keys()];
+      const selectedColumns = columns
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 5);
+      selectedColumns.sort((a, b) => a - b);
+
+      selectedColumns.forEach((col) => {
+        const availableNumbers = numbersPerColumn[col];
+        if (availableNumbers.length > 0) {
+          const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+          const number = availableNumbers.splice(randomIndex, 1)[0];
+          ticket[row][col] = number;
+        }
+      });
+    }
+
+    return ticket;
+  }
+};
+
+// --- Inlined Room model (was models/Room.js) ---
+const RoomSchema = new mongoose.Schema({
+  roomCode: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  adminName: {
+    type: String,
+    required: true,
+  },
+  players: [
+    {
+      name: {
+        type: String,
+        required: true,
+      },
+      email: {
+        type: String,
+        required: true,
+      },
+      isAdmin: {
+        type: Boolean,
+        required: true,
+      },
+      ticket: {
+        type: Array,
+      },
+      left: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  ],
+  ticket: {
+    type: Array,
+    required: true,
+  },
+  winner: {
+    jaldiFive: { type: String, default: null },
+    firstRow: { type: String, default: null },
+    secondRow: { type: String, default: null },
+    thirdRow: { type: String, default: null },
+    fullHousie: { type: String, default: null }
+  },
+  endTime: { type: Date },
+  gameStatus: {
+    type: String,
+    default: 'waiting',
+  },
+  minPlayers: {
+    type: Number,
+    default: 2,
+  },
+  generatedNumbers: {
+    type: [Number],
+    default: [],
+  },
+  chat: [
+    {
+      sender: String,
+      message: String,
+      timestamp: { type: Date, default: Date.now }
+    }
+  ]
+}, { timestamps: true });
+
+const Room = mongoose.model('Room', RoomSchema);
+
+// --- Inlined User model (was models/User.js) ---
+const UserSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true }
+});
+
+const User = mongoose.model('User', UserSchema);
 
 const app = express();
 const server = http.createServer(app); // <-- use http server
 const io = require('socket.io')(server, { cors: { origin: '*' } }); // <-- initialize socket.io
 
-const PORT = process.env.PORT || 5000;
+let PORT = parseInt(process.env.PORT, 10) || 5000;
 
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/housieGame', { useNewUrlParser: true, useUnifiedTopology: true })
+// Connect to MongoDB Atlas
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://vijay:vijay@cluster0.orzyoaj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -387,7 +510,33 @@ io.on('connection', (socket) => {
   });
 });
 
-// Start the server
+// Start the server with error handling for EADDRINUSE
+server.on('error', (err) => {
+  if (err && err.code === 'EADDRINUSE') {
+    console.warn(`Port ${PORT} is already in use. Trying port ${PORT + 1}...`);
+    PORT += 1;
+    server.listen(PORT);
+    return;
+  }
+  console.error('Server error:', err);
+  process.exit(1);
+});
+
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('Received SIGINT. Shutting down gracefully...');
+  try {
+    await mongoose.disconnect();
+    server.close(() => {
+      console.log('Server closed. Bye.');
+      process.exit(0);
+    });
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
 });
