@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000'
 
-const socket = io("http://localhost:5000");
+const socket = io(API_BASE);
 
 function Game({ roomCode }) {
   const [roomDetails, setRoomDetails] = useState(null);
@@ -13,7 +14,7 @@ function Game({ roomCode }) {
 
   const fetchRoomDetails = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/rooms/${roomCode}`);
+  const response = await axios.get(`${API_BASE}/api/rooms/${roomCode}`);
       setRoomDetails(response.data);
 
       // Mock current user (replace with actual logic to get logged-in user)
@@ -37,7 +38,7 @@ function Game({ roomCode }) {
 
     // Fetch chat history
     const fetchChat = async () => {
-      const res = await axios.get(`http://localhost:5000/api/rooms/${roomCode}/chat`);
+  const res = await axios.get(`${API_BASE}/api/rooms/${roomCode}/chat`);
       setChat(res.data.chat);
     };
     fetchChat();
@@ -54,7 +55,7 @@ function Game({ roomCode }) {
 
   const startGame = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/rooms/${roomCode}/start`, {
+    await axios.post(`${API_BASE}/api/rooms/${roomCode}/start`, {
         playerName: currentUser.name,
       });
       alert('Game started successfully!');
@@ -67,7 +68,7 @@ function Game({ roomCode }) {
 
   const sendMessage = async () => {
     if (!chatInput.trim()) return;
-    await axios.post(`http://localhost:5000/api/rooms/${roomCode}/chat`, {
+  await axios.post(`${API_BASE}/api/rooms/${roomCode}/chat`, {
       sender: user.name,
       message: chatInput
     });

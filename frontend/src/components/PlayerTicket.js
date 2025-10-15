@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import io from 'socket.io-client';
 import '../App.css';
-
-const socket = io('http://localhost:5000');
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000'
+const socket = io(API_BASE);
 
 function PlayerTicket() {
   const { roomCode, playerName } = useParams();
@@ -15,7 +15,7 @@ function PlayerTicket() {
   useEffect(() => {
     const fetchTicket = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/rooms/${roomCode}/ticket/${playerName}`);
+  const response = await axios.get(`${API_BASE}/api/rooms/${roomCode}/ticket/${playerName}`);
         setTicket(response.data.ticket);
       } catch (err) {
         console.error("Error fetching ticket:", err);
@@ -24,7 +24,7 @@ function PlayerTicket() {
 
     const fetchGeneratedNumbers = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/rooms/${roomCode}/generated-numbers`);
+  const response = await axios.get(`${API_BASE}/api/rooms/${roomCode}/generated-numbers`);
         setGeneratedNumbers(response.data.generatedNumbers);
       } catch (err) {
         console.error("Error fetching generated numbers:", err);
@@ -70,7 +70,7 @@ function PlayerTicket() {
 
   const handleLeaveRoom = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/rooms/${roomCode}/leave`, { playerName });
+  await axios.post(`${API_BASE}/api/rooms/${roomCode}/leave`, { playerName });
       alert('You have left the room.');
       navigate('/'); // Redirect to home or login
     } catch (err) {

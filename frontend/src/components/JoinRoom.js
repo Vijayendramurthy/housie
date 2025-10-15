@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000'
 
 function JoinRoom({ setRoomCode }) {
   const [roomCode, setRoomCodeInput] = useState('');
@@ -14,7 +15,7 @@ function JoinRoom({ setRoomCode }) {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/rooms/join', { roomCode, playerName });
+  await axios.post(`${API_BASE}/api/rooms/join`, { roomCode, playerName });
       setRoomCode(roomCode);
       setIsJoined(true); // Set isJoined to true on successful join
       setErrorMessage(''); // Clear the error message on successful join

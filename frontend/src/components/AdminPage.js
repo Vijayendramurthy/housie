@@ -5,7 +5,8 @@ import { useParams, useNavigate } from "react-router-dom"
 import axios from "axios"
 import io from "socket.io-client"
 
-const socket = io("http://localhost:5000")
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000'
+const socket = io(API_BASE)
 
 const styles = {
   container: {
@@ -223,7 +224,7 @@ function AdminPage() {
 
   const fetchRoomDetails = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/rooms/${roomCode}`)
+  const response = await axios.get(`${API_BASE}/api/rooms/${roomCode}`)
       setRoomDetails(response.data)
     } catch (error) {
       console.error("Error fetching room details:", error)
@@ -233,7 +234,7 @@ function AdminPage() {
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/rooms/${roomCode}/players`)
+  const response = await axios.get(`${API_BASE}/api/rooms/${roomCode}/players`)
         setPlayers(response.data.players)
       } catch (err) {
         console.error("Error fetching players:", err)
@@ -242,7 +243,7 @@ function AdminPage() {
 
     const fetchGeneratedNumbers = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/rooms/${roomCode}/generated-numbers`)
+  const response = await axios.get(`${API_BASE}/api/rooms/${roomCode}/generated-numbers`)
         setGeneratedNumbers(response.data.generatedNumbers)
       } catch (err) {
         console.error("Error fetching generated numbers:", err)
@@ -277,7 +278,7 @@ function AdminPage() {
     }
 
     try {
-      await axios.post(`http://localhost:5000/api/rooms/${roomCode}/generate-number`)
+  await axios.post(`${API_BASE}/api/rooms/${roomCode}/generate-number`)
     } catch (err) {
       console.error("Error generating number:", err)
     }
@@ -285,7 +286,7 @@ function AdminPage() {
 
   const handleEndGame = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/rooms/${roomCode}/end`)
+  await axios.post(`${API_BASE}/api/rooms/${roomCode}/end`)
       alert("Game ended!")
     } catch (err) {
       alert("Failed to end game")

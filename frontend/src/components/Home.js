@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000'
 import '../App.css'; // Import the CSS file
 
 function Home({ setRoomCode }) {
@@ -23,7 +24,7 @@ function Home({ setRoomCode }) {
 
     setIsJoining(true);
     try {
-      await axios.post('http://localhost:5000/api/rooms/join', { 
+  await axios.post(`${API_BASE}/api/rooms/join`, { 
         roomCode: joinRoomCode, 
         playerName: joinPlayerName,
         playerEmail: joinPlayerEmail
@@ -51,7 +52,7 @@ function Home({ setRoomCode }) {
 
     setIsCreating(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/rooms/create', { 
+  const response = await axios.post(`${API_BASE}/api/rooms/create`, { 
         playerName: user.name,
         playerEmail: user.email
       });
