@@ -157,7 +157,12 @@ function Authentication({ setUser }) {
         setPassword("")
       }
     } catch (err) {
-      setError(err.response?.data?.error || "Something went wrong")
+      // Log the full error for debugging (check browser console and Vercel logs)
+      console.error('Authentication error:', err)
+      // Prefer server-provided message, then HTTP status text, then generic error message
+      const serverMessage = err?.response?.data?.error
+      const statusText = err?.response?.statusText
+      setError(serverMessage || statusText || err.message || "Something went wrong")
     }
   }
 
