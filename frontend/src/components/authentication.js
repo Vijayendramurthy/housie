@@ -147,6 +147,18 @@ function Authentication({ setUser }) {
   const res = await axios.post(`${API_BASE}/api/auth/login`, { email, password })
         setUser({ name: res.data.name, email: res.data.email })
         localStorage.setItem("user", JSON.stringify({ name: res.data.name, email: res.data.email }))
+        // After login, check if this user has any pending admin games and redirect to the latest one
+        try {
+          const pending = await axios.get(`${API_BASE}/api/admin/${encodeURIComponent(res.data.email)}/pending`)
+          if (pending?.data?.pending && pending.data.pending.length > 0) {
+            // Redirect to the most recent pending admin room
+            navigate(`/admin/${pending.data.pending[0].roomCode}`)
+            return
+          }
+        } catch (err) {
+          console.error('Failed to check pending admin games:', err)
+        }
+
         navigate("/")
       } else {
   await axios.post(`${API_BASE}/api/auth/register`, { name, email, password })

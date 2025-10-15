@@ -7,6 +7,7 @@ import Game from './components/Game';
 import PlayerTicket from './components/PlayerTicket';
 import AdminPage from './components/AdminPage';
 import Authentication from './components/authentication';
+import Profile from './components/Profile';
 
 function App() {
   // Initialize user from localStorage if available
@@ -33,6 +34,7 @@ function App() {
           <Route path="/game" element={<Game roomCode={roomCode} />} />
           <Route path="/:roomCode/:playerName" element={<PlayerTicket />} />
           <Route path="/admin/:roomCode" element={<AdminPage />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>
     </Router>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 function Navbar({ user, onLogout }) {
   return (
@@ -17,6 +18,7 @@ function Navbar({ user, onLogout }) {
     }}>
       <div style={{ fontWeight: 700, fontSize: 20 }}>Housie Game</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+        <Link to="/profile" style={{ color: '#fff', textDecoration: 'none', fontWeight: 600 }}>Profile</Link>
         {user && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: 16 }}>
             <span style={{ fontWeight: 500 }}>{user.name}</span>

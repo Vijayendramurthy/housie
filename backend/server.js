@@ -384,6 +384,41 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Get games a user participated in (by email)
+app.get('/api/users/:email/games', async (req, res) => {
+  const { email } = req.params;
+  try {
+    const rooms = await Room.find({ 'players.email': email }).sort({ createdAt: -1 });
+    // Map needed fields
+    const games = rooms.map(r => ({
+      roomCode: r.roomCode,
+      adminName: r.adminName,
+      gameStatus: r.gameStatus,
+      createdAt: r.createdAt,
+      endTime: r.endTime,
+      players: r.players.map(p => ({ name: p.name, email: p.email, left: p.left })),
+      winner: r.winner
+    }));
+    res.json({ games });
+  } catch (err) {
+    console.error('Error fetching user games:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get pending (waiting) games for an admin by email
+app.get('/api/admin/:email/pending', async (req, res) => {
+  const { email } = req.params;
+  try {
+    const rooms = await Room.find({ 'players.email': email, gameStatus: 'waiting' }).sort({ createdAt: -1 });
+    const pending = rooms.map(r => ({ roomCode: r.roomCode, adminName: r.adminName, createdAt: r.createdAt }));
+    res.json({ pending });
+  } catch (err) {
+    console.error('Error fetching admin pending games:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Middleware to auto-end game after 5 hours
 async function checkRoomEnded(req, res, next) {
   const { roomCode } = req.body.roomCode ? req.body : req.params;
